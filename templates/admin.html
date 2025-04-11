@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员界面</title>
+    <style>
+        .nav a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .nav a:hover {
+            color: #5a9eeb;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .image-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #admin_control {
+            height: 70%;
+            width: 60%;
+            margin: 150px auto;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.85);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #tabs {
+            display: flex;
+            justify-content: space-around;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            border-bottom: 2px solid #ddd;
+        }
+
+        #tabs li {
+            flex: 1;
+            text-align: center;
+            padding: 15px 10px; /* 增加垂直内边距 */
+            cursor: pointer;
+            border-bottom: 3px solid transparent; /* 加粗边框 */
+            transition: all 0.3s ease; /* 添加过渡效果 */
+            position: relative; /* 为伪元素定位 */
+        }
+
+        #tabs li:hover {
+            background-color: rgba(0, 123, 255, 0.1); /* 悬停效果 */
+        }
+
+        #tabs li.active {
+            border-bottom: 3px solid #007bff;
+            font-weight: bold;
+        }
+
+        /* 添加指示器动画 */
+        #tabs li.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 5px solid #007bff;
+            transform: translateX(-50%);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        #hello_user {
+            width: 40%;
+            height: 20%;
+            margin: 0;
+            padding: 0;
+            position: absolute; /* 改为 absolute */
+            top: 20%;
+            left: 50%; /* 水平居中 */
+            transform: translate(-50%, -50%); /* 通过 transform 实现真正的居中 */
+            opacity: 1; /* 设置透明度 */
+            z-index: 1; /* 确保图表位于视频之上 */
+        }
+    </style>
+</head>
+<body>
+    <div class="image-container">
+        <img src="{{ url_for('static', filename='keepbuild.png') }}" alt="背景图片">
+    </div>
+    <div class="k-fixed-header" style="background-color: rgba(0, 0, 0, 0); transition: 0.5s; opacity: 1; display: flex; justify-content: space-between; align-items: center; padding: 0 20px;font-size: 18px; font-weight: bold;opacity: 0.8;">
+        <!-- Logo -->
+        <a href="/" style="display: inline-block;">
+            <img src="https://staticweb.keepcdn.com/staticShow/images/newhome/keep_logo-8479674405.png" class="logo" alt="Keep Logo" style="height: 40px;">
+        </a>
+    
+        <!-- 导航栏 -->
+        <div class="nav" style="display: flex; align-items: center; gap: 30px;">
+            <a >首页 </a>
+            <a >运动课程 </a>
+    
+            <!-- 子菜单 -->
+            <div class="sub-menu" style="position: relative;">
+                <a>产品和服务</a>
+                <i></i>
+                <div class="pc-sub-nav" style="position: absolute; top: 100%; left: 0; display: none; background-color: white; padding: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <a >App</a>
+                    <a >消费品</a>
+                    <a >智能硬件</a>
+                </div>
+            </div>
+    
+            <a >运动档案</a>
+            <a >可持续发展</a>
+            <a >新闻动态</a>
+            <a href="/logout">Log Out</a>
+    
+            <!-- 语言切换 -->
+            <div class="i18" style="display: flex; align-items: center; gap: 5px;">
+                <a onclick="changeLang('zh')">中</a>
+                <span>|</span>
+                <a onclick="changeLang('en')">EN</a>
+            </div>
+        </div>
+    </div>
+    <div id="hello_user">
+        <h1 style="color: rgb(14, 13, 13); text-align: center;">欢迎回到Keep!</h1>
+    </div>
+    <div id="admin_control">
+        <!-- 优化后的标签页导航 -->
+        <ul id="tabs">
+            <li data-tab="user_tab" class="active">USER</li>
+            <li data-tab="course_tab">COURSE</li>
+            <li data-tab="log_tab">LOG</li>
+        </ul>
+
+        <div id="user_tab" class="tab-content active">
+            <h2 style="text-align: center;">用户管理</h2>
+            <div class="content-wrapper">
+                <!-- 用户表格 -->
+                <table id="user_table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                    <thead>
+                        <tr style="background-color: #f4f4f4; text-align: left;">
+                            <th style="padding: 10px; border: 1px solid #ddd;">用户名</th>
+                            <th style="padding: 10px; border: 1px solid #ddd;">时间</th>
+                            <th style="padding: 10px; border: 1px solid #ddd;">锻炼时长 (分钟)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 动态插入用户数据 -->
+                    </tbody>
+                </table>
+        
+                <!-- 分页控件 -->
+                <div id="pagination" style="margin-top: 20px; text-align: center;">
+                    <!-- 动态生成分页按钮 -->
+                </div>
+            </div>
+        </div>
+        
+        <div id="course_tab" class="tab-content">
+            <h2 style="text-align: center;">课程管理</h2>
+            <div class="content-wrapper">
+                <!-- 这里可以添加课程管理的内容 -->
+                <p>课程列表、添加课程、编辑课程等功能区域</p>
+            </div>
+        </div>
+        
+        <div id="log_tab" class="tab-content">
+            <h2 style="text-align: center;">日志管理</h2>
+            <div class="content-wrapper">
+                <!-- 日志表格 -->
+                <table id="log_table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                    <thead>
+                        <tr style="background-color: #f4f4f4; text-align: left;">
+                            <th style="padding: 10px; border: 1px solid #ddd;">用户</th>
+                            <th style="padding: 10px; border: 1px solid #ddd;">操作</th>
+                            <th style="padding: 10px; border: 1px solid #ddd;">时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 动态插入日志数据 -->
+                    </tbody>
+                </table>
+        
+                <!-- 分页控件 -->
+                <div id="log_pagination" style="margin-top: 20px; text-align: center;">
+                    <!-- 动态生成分页按钮 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+
+        const user = {{ user | tojson }}; // 从后端传递的用户数据
+        const logs = {{ logs | tojson }}; // 从后端传递的日志数据
+
+        // 分页参数
+        const rowsPerPage = 8; // 每页显示的行数
+        let currentPage = 1; // 当前页码
+
+        let logCurrentPage = 1;
+        // 优化后的JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabNav = document.getElementById('tabs');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            // 事件委托处理点击
+            tabNav.addEventListener('click', function(e) {
+                const targetTab = e.target.closest('li');
+                if (!targetTab || targetTab.classList.contains('active')) return;
+        
+                // 获取目标标签ID
+                const targetId = targetTab.dataset.tab;
+                
+                // 切换导航状态
+                document.querySelectorAll('#tabs li').forEach(tab => {
+                    tab.classList.remove('active');
+                    tab.setAttribute('aria-selected', 'false');
+                });
+                targetTab.classList.add('active');
+                targetTab.setAttribute('aria-selected', 'true');
+        
+                // 切换内容
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                    content.setAttribute('aria-hidden', 'true');
+                });
+                document.getElementById(targetId).classList.add('active');
+                document.getElementById(targetId).setAttribute('aria-hidden', 'false');
+            });
+        
+            // 键盘导航支持
+            tabNav.addEventListener('keydown', function(e) {
+                const tabs = Array.from(this.querySelectorAll('li'));
+                const currentIndex = tabs.findIndex(t => t.classList.contains('active'));
+                
+                if (e.key === 'ArrowRight') {
+                    const nextIndex = (currentIndex + 1) % tabs.length;
+                    tabs[nextIndex].click();
+                    tabs[nextIndex].focus();
+                }
+                if (e.key === 'ArrowLeft') {
+                    const prevIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+                    tabs[prevIndex].click();
+                    tabs[prevIndex].focus();
+                }
+            });
+        
+            // 初始化ARIA属性
+            document.querySelectorAll('#tabs li').forEach((tab, index) => {
+                tab.setAttribute('role', 'tab');
+                tab.setAttribute('aria-controls', tab.dataset.tab);
+                tab.setAttribute('tabindex', index === 0 ? '0' : '-1');
+            });
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.setAttribute('role', 'tabpanel');
+                content.setAttribute('aria-labelledby', content.id);
+            });
+        });
+
+
+        // 渲染用户表格内容
+    function renderUserTable(data, page = 1) {
+        const tableBody = document.querySelector("#user_table tbody");
+        tableBody.innerHTML = ""; // 清空表格内容
+
+        // 计算当前页的数据范围
+        const startIndex = (page - 1) * rowsPerPage;
+        const endIndex = Math.min(startIndex + rowsPerPage, data.length);
+
+        // 渲染当前页的数据
+        for (let i = startIndex; i < endIndex; i++) {
+            const record = data[i];
+            const row = document.createElement("tr");
+
+            // 创建用户名单元格
+            const usernameCell = document.createElement("td");
+            usernameCell.textContent = record.username;
+            usernameCell.style.padding = "10px";
+            usernameCell.style.border = "1px solid #ddd";
+
+            // 创建时间单元格
+            const timeCell = document.createElement("td");
+            timeCell.textContent = record.time;
+            timeCell.style.padding = "10px";
+            timeCell.style.border = "1px solid #ddd";
+
+            // 创建锻炼时长单元格
+            const durationCell = document.createElement("td");
+            durationCell.textContent = record.exercise_duration;
+            durationCell.style.padding = "10px";
+            durationCell.style.border = "1px solid #ddd";
+
+            // 将单元格添加到行
+            row.appendChild(usernameCell);
+            row.appendChild(timeCell);
+            row.appendChild(durationCell);
+
+            // 将行添加到表格主体
+            tableBody.appendChild(row);
+        }
+    }
+
+    // 渲染日志表格内容
+    function renderLogTable(data, page = 1) {
+        const tableBody = document.querySelector("#log_table tbody");
+        tableBody.innerHTML = ""; // 清空表格内容
+
+        // 计算当前页的数据范围
+        const startIndex = (page - 1) * rowsPerPage;
+        const endIndex = Math.min(startIndex + rowsPerPage, data.length);
+
+        // 渲染当前页的数据
+        for (let i = startIndex; i < endIndex; i++) {
+            const record = data[i];
+            const row = document.createElement("tr");
+
+            // 创建用户单元格
+            const userCell = document.createElement("td");
+            userCell.textContent = record.user;
+            userCell.style.padding = "10px";
+            userCell.style.border = "1px solid #ddd";
+
+            // 创建操作单元格
+            const actionCell = document.createElement("td");
+            actionCell.textContent = record.action;
+            actionCell.style.padding = "10px";
+            actionCell.style.border = "1px solid #ddd";
+
+            // 创建时间单元格
+            const timeCell = document.createElement("td");
+            timeCell.textContent = record.create_time;
+            timeCell.style.padding = "10px";
+            timeCell.style.border = "1px solid #ddd";
+
+            // 将单元格添加到行
+            row.appendChild(userCell);
+            row.appendChild(actionCell);
+            row.appendChild(timeCell);
+
+            // 将行添加到表格主体
+            tableBody.appendChild(row);
+        }
+    }
+
+    // 渲染用户分页控件
+    function renderUserPagination(data) {
+        const pagination = document.getElementById("pagination");
+        pagination.innerHTML = ""; // 清空分页控件
+
+        const totalPages = Math.ceil(data.length / rowsPerPage);
+
+        // 创建分页按钮
+        for (let i = 1; i <= totalPages; i++) {
+            const button = document.createElement("button");
+            button.textContent = i;
+            button.style.margin = "0 5px";
+            button.style.padding = "5px 10px";
+            button.style.border = "1px solid #ddd";
+            button.style.backgroundColor = i === currentPage ? "#007bff" : "#fff";
+            button.style.color = i === currentPage ? "#fff" : "#000";
+            button.style.cursor = "pointer";
+
+            // 添加点击事件
+            button.addEventListener("click", () => {
+                currentPage = i;
+                renderUserTable(data, currentPage);
+                renderUserPagination(data);
+            });
+
+            pagination.appendChild(button);
+        }
+    }
+
+    // 渲染日志分页控件
+    function renderLogPagination(data) {
+        const pagination = document.getElementById("log_pagination");
+        pagination.innerHTML = ""; // 清空分页控件
+
+        const totalPages = Math.ceil(data.length / rowsPerPage);
+        console.log("日志数据:", data.length);
+        // 创建分页按钮
+        for (let i = 1; i <= totalPages; i++) {
+            const button = document.createElement("button");
+            button.textContent = i;
+            button.style.margin = "0 5px";
+            button.style.padding = "5px 10px";
+            button.style.border = "1px solid #ddd";
+            button.style.backgroundColor = i === logCurrentPage ? "#007bff" : "#fff";
+            button.style.color = i === logCurrentPage ? "#fff" : "#000";
+            button.style.cursor = "pointer";
+
+            // 添加点击事件
+            button.addEventListener("click", () => {
+                logCurrentPage = i;
+                renderLogTable(data, logCurrentPage);
+                renderLogPagination(data);
+            });
+
+            pagination.appendChild(button);
+        }
+    }
+
+    // 初始化用户表格和分页
+    renderUserTable(user, currentPage);
+    renderUserPagination(user);
+
+    // 初始化日志表格和分页
+    renderLogTable(logs, logCurrentPage);
+    renderLogPagination(logs);
+    </script>
+</body>
+</html>

@@ -37,6 +37,9 @@ def login():
         # 简单的登录验证逻辑（替换为实际的数据库验证）
         if password == true_password:  # 示例用户
             session['username'] = username  # 将用户名存储到 session
+            if username == 'admin':
+                # 如果是管理员，重定向到管理员页面
+                return redirect(url_for('admin'))
             return redirect(url_for('index'))
         else:
             return render_template('login_new.html', error='Invalid credentials')
@@ -104,7 +107,10 @@ def add_cruse():
     else:
         return redirect(url_for('login'))
     
-
+@app.route('/admin')
+def admin():
+    print(db.get_log_records())
+    return render_template('admin.html',user = db.get_exercise_time_records(),logs = db.get_log_records())
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -108,6 +108,29 @@ def create_indexes(connection):
     except Error as e:
         print(f"创建索引时发生错误: {e}")
 
+def log_action(username, action):
+    """
+    记录用户操作到日志表
+    :param username: 用户名
+    :param action: 操作名称
+    """
+    try:
+        cursor = connection.cursor()
+        
+        # 插入日志记录
+        cursor.execute("""
+            INSERT INTO log (user, action, create_time)
+            VALUES (%s, %s, NOW())
+        """, (username, action))
+        
+        # 提交事务
+        connection.commit()
+        cursor.close()
+        print(f"记录日志：用户 {username} 执行了操作 {action}")
+    except Error as e:
+        print(f"记录日志时发生错误: {e}")
+
+
 def create_triggers(connection):
     try:
         cursor = connection.cursor()
@@ -353,6 +376,7 @@ def get_password_by_username(username):
         result = cursor.fetchone()
         cursor.close()
         if result:
+            log_action(username, "login")  # 调用记录日志的函数
             return result[0]  # 返回密码
         else:
             return None  # 用户名不存在
@@ -366,6 +390,7 @@ def get_training_plan_for_current_month(username):
     :return: 返回本月的训练计划列表
     """
     try:
+        log_action(username, "get_plan")  # 调用记录日志的函数
         cursor = connection.cursor()
         # 获取当前日期的月份和年份
         current_year = datetime.now().year
@@ -398,6 +423,7 @@ def get_exercise_records_for_current_month(username):
     :return: 返回本月的锻炼记录列表
     """
     try:
+        log_action(username, "get_records")  # 调用记录日志的函数
         cursor = connection.cursor()
         # 获取当前日期的月份和年份
         current_year = datetime.now().year
@@ -429,6 +455,7 @@ def save_today_exercise_time(username, exercise_duration):
     :param exercise_duration: 本次锻炼时长（分钟）
     """
     try:
+        log_action(username, "save_exercise")  # 调用记录日志的函数
         cursor = connection.cursor()
         # 获取今天的日期
         today = datetime.now().date()
@@ -495,6 +522,7 @@ def get_user_registered_courses(username):
     :return: 返回用户已报名课程的列表
     """
     try:
+        log_action(username, "registered_courses")  # 调用记录日志的函数
         cursor = connection.cursor()
         # 查询 CourseRegistration 表中指定用户的课程
         cursor.execute("""
@@ -519,6 +547,7 @@ def drop_course(username, course_name):
     :param course_name: 课程名称
     """
     try:
+        log_action(username, "drop_course")  # 调用记录日志的函数
         cursor = connection.cursor()
         cursor.execute("""
             DELETE FROM CourseRegistration
@@ -538,6 +567,7 @@ def register_course(username, course_name):
     :param course_name: 课程名称
     """
     try:
+        log_action(username, "register_course")  # 调用记录日志的函数
         cursor = connection.cursor()
         # 获取当前时间作为报名时间
         registration_time = datetime.now()
@@ -562,6 +592,8 @@ def get_user_current_month_exercise_time(username):
         dict: 包含用户名、月份和总锻炼分钟数的字典
     """
     try:
+        log_action(username, "get_user_current_month_exercise_time")  # 调用记录日志的函数
+
         cursor = connection.cursor()
         
         # 获取当前年月
@@ -609,7 +641,8 @@ def get_user_current_month_planned_exercise_time(username):
     """
     try:
         cursor = connection.cursor()
-        
+        log_action(username, "get_user_current_month_planned_exercise_time")  # 调用记录日志的函数
+
         # 获取当前年月
         cursor.execute("SELECT YEAR(CURRENT_DATE()), MONTH(CURRENT_DATE())")
         current_year, current_month = cursor.fetchone()
@@ -687,6 +720,8 @@ def get_user_summary(username):
         dict: 包含用户订阅课程和历史运动总时间的字典
     """
     try:
+        log_action(username, "get_user_summary")  # 调用记录日志的函数
+
         cursor = connection.cursor()
         
         # 查询 user_summary 视图中的用户数据
@@ -713,13 +748,78 @@ def get_user_summary(username):
     except Error as e:
         print(f"查询用户 {username} 的订阅课程和历史运动总时间时发生错误: {e}")
         return None
+    
+def get_exercise_time_records():
+    """
+    查询 ExerciseTime 表中的 username、time 和 exercise_duration
+
+    Returns:
+        list: 包含每条记录的字典列表，每个字典包含 username、time 和 exercise_duration
+    """
+    try:
+        cursor = connection.cursor()
+        
+        # 查询 ExerciseTime 表中的数据
+        cursor.execute("""
+            SELECT username, time, exercise_duration
+            FROM ExerciseTime
+        """)
+        
+        # 获取查询结果
+        records = cursor.fetchall()
+        
+        # 将结果转换为字典列表
+        result = [
+            {"username": username, "time": time, "exercise_duration": exercise_duration}
+            for username, time, exercise_duration in records
+        ]
+        
+        cursor.close()
+        return result
+    
+    except Error as e:
+        print(f"查询 ExerciseTime 表时发生错误: {e}")
+        return []
+
+def get_log_records():
+    """
+    查询 log 表中的 user、action 和 create_time
+
+    Returns:
+        list: 包含每条记录的字典列表，每个字典包含 user、action 和 create_time
+    """
+    try:
+        cursor = connection.cursor()
+        
+        # 查询 log 表中的数据
+        cursor.execute("""
+            SELECT user, action, create_time
+            FROM log
+        """)
+        
+        # 获取查询结果
+        records = cursor.fetchall()
+        
+        # 将结果转换为字典列表
+        result = [
+            {"user": user, "action": action, "create_time": create_time}
+            for user, action, create_time in records
+        ]
+        
+        cursor.close()
+        return result
+    
+    except Error as e:
+        print(f"查询 log 表时发生错误: {e}")
+        return []
+    
 def main():
     #connection = connect_to_database()
     if connection:
         # create_tables(connection)
         # create_indexes(connection)
         # create_triggers(connection)
-        create_user_summary_view(connection)
+        # create_user_summary_view(connection)
         # generate_exercise_time(connection)
         # print_tables(connection)
         # simulate_course_registration(connection)
