@@ -22,7 +22,7 @@ def index():
         list_record = db.get_exercise_records_for_current_month(username)
         total_plan_duration = db.get_user_current_month_planned_exercise_time(username)
         total_actual_duration = db.get_user_current_month_exercise_time(username)
-        return render_template('index.html', list_plan=list_plan, list_record=list_record,total_plan_duration=total_plan_duration, total_actual_duration=total_actual_duration)
+        return render_template('index.html', list_plan=list_plan, list_record=list_record,total_plan_duration=total_plan_duration, total_actual_duration=total_actual_duration,histroy=db.get_user_summary(username))
     else:
         return redirect(url_for('login'))
 

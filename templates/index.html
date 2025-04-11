@@ -79,7 +79,7 @@
             margin: 0;
             padding: 0;
             position: absolute; /* 改为 absolute */
-            top: 80%; /* 垂直居中 */
+            top: 85%; /* 垂直居中 */
             left: 50%; /* 水平居中 */
             transform: translate(-50%, -50%); /* 通过 transform 实现真正的居中 */
             opacity: 0.8; /* 设置透明度 */
@@ -132,7 +132,23 @@
     </div>
     <div id="container"></div>
     <!-- 本月锻炼总结 -->
-    <div id="summary" style="display: flex; justify-content: space-around; align-items: center; width: 60%; margin: 550px auto; padding: 20px; background-color: rgba(255, 255, 255, 0.8); border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+    <div id="summary_histroy" style="display: flex; justify-content: space-around; align-items: center; width: 60%; margin: 500px auto 25px auto; padding: 20px; background-color: rgba(255, 255, 255, 0.8); border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+        <div style="text-align: center;">
+            <h2 style="margin: 0; font-size: 20px; color: #333;">历史总运动时长</h2>
+            <p style="margin: 10px 0; font-size: 18px; color: #555;">{{ histroy['total_exercise_duration'] }} 分钟</p>
+        </div>
+        <div style="text-align: center;">
+            <h2 style="margin: 0; font-size: 20px; color: #333;">现在订阅的课程</h2>
+            <p style="margin: 10px 0; font-size: 18px; color: #555;">
+                {% if histroy['courses_registered'] %}
+                    {{ histroy['courses_registered'] }}
+                {% else %}
+                    没有订阅课程
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    <div id="summary" style="display: flex; justify-content: space-around; align-items: center; width: 60%; margin: 25px auto; padding: 20px; background-color: rgba(255, 255, 255, 0.8); border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
         <div style="text-align: center;">
             <h2 style="margin: 0; font-size: 20px; color: #333;">本月规划锻炼总时长</h2>
             <p style="margin: 10px 0; font-size: 18px; color: #555;">{{ total_plan_duration }} 分钟</p>

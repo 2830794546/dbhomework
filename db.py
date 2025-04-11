@@ -175,9 +175,70 @@ def create_triggers(connection):
                 WHERE course = OLD.course;
             END;
         """)
+        # 触发器 4: 当用户取消订阅课程时，删除 TrainingPlan 中的记录
+        cursor.execute("""
+            CREATE TRIGGER remove_training_plan
+            AFTER DELETE ON CourseRegistration
+            FOR EACH ROW
+            BEGIN
+                DECLARE next_time DATETIME;
+                DECLARE interval_days INT;
+                DECLARE course_duration INT;
+
+                -- 获取课程的 duration 和 interval_time
+                SELECT duration, interval_time INTO course_duration, interval_days
+                FROM Course
+                WHERE course = OLD.course;
+
+                -- 初始化 next_time 为 OLD.time
+                SET next_time = OLD.time;
+
+                -- 循环检查并删除 TrainingPlan 表中的记录
+                WHILE next_time <= DATE_ADD(OLD.time, INTERVAL 2 MONTH) DO
+                    -- 检查 TrainingPlan 表中是否存在该 username 和 next_time 的记录
+                    IF EXISTS (SELECT 1 FROM TrainingPlan WHERE username = OLD.username AND time = next_time) THEN
+                        -- 如果存在，删除记录
+                        DELETE FROM TrainingPlan
+                        WHERE username = OLD.username AND time = next_time;
+                    END IF;
+
+                    -- 计算下一个时间点
+                    SET next_time = DATE_ADD(next_time, INTERVAL interval_days DAY);
+                END WHILE;
+            END;
+        """)
         cursor.close()
     except Error as e:
         print(f"创建触发器时发生错误: {e}")
+def create_user_summary_view(connection):
+    """
+    创建 user_summary 视图，用于汇总用户的锻炼时长、报名课程总数和课程列表
+    """
+    try:
+        cursor = connection.cursor()
+        # 创建视图的 SQL 脚本
+        create_view_query = """
+        CREATE OR REPLACE VIEW user_summary AS
+        SELECT
+            u.username,
+            COALESCE(SUM(e.exercise_duration), 0) AS total_exercise_duration, -- 用户总锻炼时长
+            COALESCE(COUNT(DISTINCT cr.course), 0) AS total_courses_registered, -- 用户报名的课程总数
+            COALESCE(GROUP_CONCAT(DISTINCT cr.course ORDER BY cr.course SEPARATOR ', '), '无') AS courses_registered -- 用户报名的课程列表
+        FROM
+            Users u
+        LEFT JOIN ExerciseTime e ON u.id = e.id -- 连接锻炼时间表
+        LEFT JOIN CourseRegistration cr ON u.id = cr.id -- 连接课程报名表
+        GROUP BY
+            u.username;
+        """
+        # 执行创建视图的 SQL 脚本
+        cursor.execute(create_view_query)
+        connection.commit()
+        print("user_summary 视图创建成功！")
+        cursor.close()
+    except Error as e:
+        print(f"创建 user_summary 视图时发生错误: {e}")
+
 
 def print_tables(connection):
     try:
@@ -615,12 +676,50 @@ def get_course_participants():
     except Error as e:
         print(f"获取课程人数时发生错误: {e}")
         return {}
+def get_user_summary(username):
+    """
+    从 user_summary 视图中查询用户的订阅课程和历史运动总时间
+
+    Args:
+        username (str): 用户名
+
+    Returns:
+        dict: 包含用户订阅课程和历史运动总时间的字典
+    """
+    try:
+        cursor = connection.cursor()
+        
+        # 查询 user_summary 视图中的用户数据
+        cursor.execute("""
+            SELECT total_exercise_duration, courses_registered
+            FROM user_summary
+            WHERE username = %s
+        """, (username,))
+        
+        result = cursor.fetchone()
+        cursor.close()
+        
+        if result:
+            total_exercise_duration, courses_registered = result
+            return {
+                "username": username,
+                "total_exercise_duration": int(total_exercise_duration),
+                "courses_registered": courses_registered
+            }
+        else:
+            print(f"未找到用户 {username} 的数据")
+            return None
+    
+    except Error as e:
+        print(f"查询用户 {username} 的订阅课程和历史运动总时间时发生错误: {e}")
+        return None
 def main():
     #connection = connect_to_database()
     if connection:
         # create_tables(connection)
         # create_indexes(connection)
         # create_triggers(connection)
+        create_user_summary_view(connection)
         # generate_exercise_time(connection)
         # print_tables(connection)
         # simulate_course_registration(connection)
@@ -631,7 +730,8 @@ def main():
         # print(get_user_registered_courses("wangyi"))
         # print(get_user_current_month_exercise_time("wangyi"))
         # print(get_user_current_month_planned_exercise_time("wangyi"))
-        print(get_course_participants())
+        # print(get_course_participants())
+        # print(get_user_summary('wangyi'))
         connection.commit()
         connection.close()
         print("数据库操作完成")
