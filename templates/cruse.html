@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fullscreen Video Background</title>
+    <!-- 添加 favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='icon.png') }}" type="image/x-icon">
+    <script src="https://cdn.anychart.com/releases/8.11.0/js/anychart-base.min.js"></script>
+    <script src="{{ url_for('static', filename='js/chart_module.js') }}"></script>
+
+    <style>
+        .nav a {
+        text-decoration: none; /* 移除下划线 */
+        color: inherit; /* 继承父元素颜色 */
+        }
+
+        .nav a:hover {
+            color: #5a9eeb; /* 鼠标悬停时的颜色 */
+        }
+        /* 设置全局样式 */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* 隐藏滚动条 */
+        }
+        /* 视频容器 */
+        .video-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1; /* 将视频置于底层 */
+        }
+
+        /* 视频样式 */
+        video {
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            object-fit: cover; /* 保持视频比例，覆盖整个容器 */
+        }
+        #container {
+            width: 90%;
+            height: 90%;
+            margin: 0;
+            padding: 0;
+            position: absolute; /* 改为 absolute */
+            top: 50%; /* 垂直居中 */
+            left: 50%; /* 水平居中 */
+            transform: translate(-50%, -50%); /* 通过 transform 实现真正的居中 */
+            opacity: 0.6; /* 设置透明度 */
+            z-index: 1; /* 确保图表位于视频之上 */
+            background-color: black; /* 设置背景颜色 */
+            border-radius: 10px; /* 设置圆角 */
+        }
+        #hello_user {
+            width: 40%;
+            height: 20%;
+            margin: 0;
+            padding: 0;
+            position: absolute; /* 改为 absolute */
+            top: 20%;
+            left: 50%; /* 水平居中 */
+            transform: translate(-50%, -50%); /* 通过 transform 实现真正的居中 */
+            opacity: 0.8; /* 设置透明度 */
+            z-index: 1; /* 确保图表位于视频之上 */
+        }
+        #record {
+            width: 40%;
+            height: 5%;
+            margin: 0;
+            padding: 0;
+            position: absolute; /* 改为 absolute */
+            top: 70%; /* 垂直居中 */
+            left: 50%; /* 水平居中 */
+            transform: translate(-50%, -50%); /* 通过 transform 实现真正的居中 */
+            opacity: 0.8; /* 设置透明度 */
+            z-index: 1; /* 确保图表位于视频之上 */
+        }
+    </style>
+</head>
+<body>
+    <!-- 视频容器 -->
+    <div class="video-container">
+        <video autoplay loop muted>
+            <source src="{{ url_for('static', filename='cruse.mp4') }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    <div class="k-fixed-header" style="background-color: rgba(0, 0, 0, 0); transition: 0.5s; opacity: 1; display: flex; justify-content: space-between; align-items: center; padding: 0 20px;font-size: 18px; font-weight: bold;">
+        <!-- Logo -->
+        <a href="/" style="display: inline-block;">
+            <img src="https://staticweb.keepcdn.com/staticShow/images/newhome/keep_logo-8479674405.png" class="logo" alt="Keep Logo" style="height: 40px;">
+        </a>
+    
+        <!-- 导航栏 -->
+        <div class="nav" style="display: flex; align-items: center; gap: 30px;">
+            <a href="/">首页 </a>
+            <a href="/cruse">运动课程 </a>
+    
+            <!-- 子菜单 -->
+            <div class="sub-menu" style="position: relative;">
+                <a>产品和服务</a>
+                <i></i>
+                <div class="pc-sub-nav" style="position: absolute; top: 100%; left: 0; display: none; background-color: white; padding: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <a >App</a>
+                    <a >消费品</a>
+                    <a >智能硬件</a>
+                </div>
+            </div>
+    
+            <a >运动档案</a>
+            <a >可持续发展</a>
+            <a >新闻动态</a>
+            <a href="/logout">Log Out</a>
+    
+            <div class="i18" style="display: flex; align-items: center; gap: 5px;">
+                <a onclick="changeLang('zh')">中</a>
+                <span>|</span>
+                <a onclick="changeLang('en')">EN</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="container" style="overflow-y: auto;">
+        <h1 style="text-align: center; color: white;">运动课程</h1>
+    
+        <!-- 已报名课程 -->
+        <div style="margin: 20px; padding: 20px; background-color: rgba(255, 255, 255, 0.1); border-radius: 10px;">
+            <h2 style="text-align: center; color: white;">已报名课程</h2>
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+                {% if cruse_now %}
+                    {% for course in cruse_now %}
+                    <div style="width: 30%; background-color: rgba(0, 0, 0, 0.5); border-radius: 10px; padding: 10px; text-align: center;">
+                        <h3 style="color: white;">{{ course }}</h3>
+                        <h3 style="color: white; font-size: 18px;">报名人数：{{ course_participants[course] }}</h3>
+                        <img src="{{ url_for('static', filename=course + '.png') }}" alt="{{ course }}" style="width: 100%; border-radius: 10px;">
+                        <form action="{{ url_for('delete_cruse') }}" method="POST" style="margin-top: 10px;">
+                            <input type="hidden" name="course_name" value="{{ course }}">
+                            <button type="submit" style="padding: 10px 35px; background-color: black; color: white; border: none; border-radius: 5px; font-size: 18px; font-weight: bold; cursor: pointer;">
+                                退课
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="color: white; text-align: center;">暂无已报名课程</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 未报名课程 -->
+        <div style="margin: 20px; padding: 20px; background-color: rgba(255, 255, 255, 0.1); border-radius: 10px;">
+            <h2 style="text-align: center; color: white;">未报名课程</h2>
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+                {% if cruse_not_registered %}
+                    {% for course in cruse_not_registered %}
+                    <div style="width: 30%; background-color: rgba(0, 0, 0, 0.5); border-radius: 10px; padding: 10px; text-align: center;">
+                        <h3 style="color: white;">{{ course }}</h3>
+                        <h3 style="color: white; font-size: 18px;">报名人数：{{ course_participants[course] }}</h3>
+                        <img src="{{ url_for('static', filename=course + '.png') }}" alt="{{ course }}" style="width: 100%; border-radius: 10px;">
+                        <form action="{{ url_for('add_cruse') }}" method="POST" style="margin-top: 10px;">
+                            <input type="hidden" name="course_name" value="{{ course }}">
+                            <button type="submit" style="padding: 10px 35px; background-color: black; color: white; border: none; border-radius: 5px; font-size: 18px; font-weight: bold; cursor: pointer;">
+                                报名
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="color: white; text-align: center;">暂无未报名课程</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

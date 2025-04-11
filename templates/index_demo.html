@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fullscreen Video Background</title>
+    <!-- 添加 favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='icon.png') }}" type="image/x-icon">
+    <script src="https://cdn.anychart.com/releases/8.11.0/js/anychart-base.min.js"></script>
+    <script src="{{ url_for('static', filename='js/chart_module.js') }}"></script>
+
+    <style>
+        .nav a {
+        text-decoration: none; /* 移除下划线 */
+        color: inherit; /* 继承父元素颜色 */
+        }
+
+        .nav a:hover {
+            color: #5a9eeb; /* 鼠标悬停时的颜色 */
+        }
+        /* 设置全局样式 */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* 隐藏滚动条 */
+        }
+        /* 视频容器 */
+        .video-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1; /* 将视频置于底层 */
+        }
+
+        /* 视频样式 */
+        video {
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            object-fit: cover; /* 保持视频比例，覆盖整个容器 */
+        }
+        #container {
+            width: 60%;
+            height: 40%;
+            margin: 0;
+            padding: 0;
+            position: absolute; /* 改为 absolute */
+            top: 30%; /* 垂直居中 */
+            left: 50%; /* 水平居中 */
+            transform: translate(-50%, -50%); /* 通过 transform 实现真正的居中 */
+            opacity: 0.8; /* 设置透明度 */
+            z-index: 1; /* 确保图表位于视频之上 */
+        }
+        #hello_user {
+            width: 40%;
+            height: 20%;
+            margin: 0;
+            padding: 0;
+            position: absolute; /* 改为 absolute */
+            top: 10%; /* 垂直居中 */
+            left: 50%; /* 水平居中 */
+            transform: translate(-50%, -50%); /* 通过 transform 实现真正的居中 */
+            opacity: 0.8; /* 设置透明度 */
+            z-index: 1; /* 确保图表位于视频之上 */
+        }
+        #record {
+            width: 40%;
+            height: 5%;
+            margin: 0;
+            padding: 0;
+            position: absolute; /* 改为 absolute */
+            top: 60%; /* 垂直居中 */
+            left: 50%; /* 水平居中 */
+            transform: translate(-50%, -50%); /* 通过 transform 实现真正的居中 */
+            opacity: 0.8; /* 设置透明度 */
+            z-index: 1; /* 确保图表位于视频之上 */
+        }
+    </style>
+</head>
+<body>
+    <!-- 视频容器 -->
+    <div class="video-container">
+        <video autoplay loop muted>
+            <source src="{{ url_for('static', filename='home_video.mp4') }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    <div class="k-fixed-header" style="background-color: rgba(0, 0, 0, 0); transition: 0.5s; opacity: 1; display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
+        <!-- Logo -->
+        <a href="/" style="display: inline-block;">
+            <img src="https://staticweb.keepcdn.com/staticShow/images/newhome/keep_logo-8479674405.png" class="logo" alt="Keep Logo" style="height: 40px;">
+        </a>
+    
+        <!-- 导航栏 -->
+        <div class="nav" style="display: flex; align-items: center; gap: 30px;">
+            <a>运动课程</a>
+            <a>了解 Keep</a>
+    
+            <!-- 子菜单 -->
+            <div class="sub-menu" style="position: relative;">
+                <a>产品和服务</a>
+                <i></i>
+                <div class="pc-sub-nav" style="position: absolute; top: 100%; left: 0; display: none; background-color: white; padding: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <a >App</a>
+                    <a >消费品</a>
+                    <a >智能硬件</a>
+                </div>
+            </div>
+    
+            <a >运动档案</a>
+            <a >可持续发展</a>
+            <a >新闻动态</a>
+            <a >投资者关系</a>
+    
+            <!-- 语言切换 -->
+            <div class="i18" style="display: flex; align-items: center; gap: 5px;">
+                <a onclick="changeLang('zh')">中</a>
+                <span>|</span>
+                <a onclick="changeLang('en')">EN</a>
+            </div>
+        </div>
+    </div>
+    
+</body>
+</html>
